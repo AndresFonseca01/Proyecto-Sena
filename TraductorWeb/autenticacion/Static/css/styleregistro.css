@@ -54,7 +54,9 @@ header .Help {
 	box-shadow: 5px;
 }
 .berror {
+	font-size: 17px;
 	color: #fe2d00;
+	margin-left: 10px;
 	border-radius: 10px;
 	text-decoration: underline;
 }

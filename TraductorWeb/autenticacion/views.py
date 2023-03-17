@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
 from autenticacion.models import User
+import re
 
 
 def index(request):
@@ -18,16 +19,31 @@ def signup(request):
             'form': UserCreationForm
         })
     else:
-        if request.POST['password1'] == request.POST['password2']:
+        # Validación del correo electrónico
+        email = request.POST['email']
+        if not re.match(r'^[\w\.-]+@(misena\.edu\.co|soy\.sena\.edu\.co)$', email):
+            return render(request, 'registro.html', {
+                'form': UserCreationForm, "error": "El correo debe ser de @misena.edu.co o @soy.sena.edu.co"
+            })
+
+        # Validación de la contraseña
+        password1 = request.POST['password1']
+        if len(password1) < 5:
+            return render(request, 'registro.html', {
+                'form': UserCreationForm, "error": "La contraseña debe tener al menos 5 caracteres"
+            })
+
+        # Crear el usuario si las validaciones pasan
+        if password1 == request.POST['password2']:
             try:
                 user = User.objects.create_user(
-                    request.POST['username'], password=request.POST['password1'], email=request.POST['email'], last_name=request.POST['last_name'], first_name=request.POST['first_name'], document=request.POST['document'])
+                    request.POST['username'], password=password1, email=email, last_name=request.POST['last_name'], first_name=request.POST['first_name'], document=request.POST['document'])
                 user.save()
                 login(request, user)
                 return redirect('traductor')
             except IntegrityError:
                 return render(request, 'registro.html', {
-                    'form': UserCreationForm, "error": "Nombre de usuario o  Correo ya existen"
+                    'form': UserCreationForm, "error": "Nombre de usuario o correo ya existen"
                 })
         return render(request, 'registro.html', {
             'form': UserCreationForm, "error": "Las contraseñas no coinciden"
